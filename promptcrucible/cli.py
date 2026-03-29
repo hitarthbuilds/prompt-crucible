@@ -22,8 +22,8 @@ from .store import ExperimentStore
 
 
 DEFAULT_CONFIG = {
-    "model": "qwen2.5:14b",
-    "judge_model": "qwen2.5:7b",
+    "model": "qwen2.5:7b",
+    "judge_model": "phi3:mini",
     "threshold": 0.90,
     "max_iter": 10,
     "chunk_size": 20,
@@ -823,8 +823,8 @@ def init() -> None:
 )
 @click.option("--threshold", default=0.90, show_default=True, type=float)
 @click.option("--max-iter", default=10, show_default=True, type=int)
-@click.option("--model", default="qwen2.5:14b", show_default=True)
-@click.option("--judge-model", default="qwen2.5:7b", show_default=True)
+@click.option("--model", default="qwen2.5:7b", show_default=True)
+@click.option("--judge-model", default="phi3:mini", show_default=True)
 @click.option("--chunk-size", default=20, show_default=True, type=int)
 @click.option("--timeout", default=120, show_default=True, type=int)
 @click.option("--no-ui", is_flag=True, default=False)

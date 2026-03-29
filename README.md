@@ -29,8 +29,8 @@ as memory — so the system never repeats a failed approach.
 
 ```bash
 pip install promptcrucible
-ollama pull qwen2.5:14b
 ollama pull qwen2.5:7b
+ollama pull phi3:mini
 
 crucible init
 crucible run --prompt prompt.txt --inputs ./documents/
@@ -45,7 +45,7 @@ Financial reports · Research papers · Receipts · Custom formats
 
 - Python 3.11+
 - Ollama running locally (`ollama serve`)
-- Any Ollama model (default: `qwen2.5:14b`)
+- Any Ollama model (default: `qwen2.5:7b`, judge: `phi3:mini`)
 
 ## Architecture
 

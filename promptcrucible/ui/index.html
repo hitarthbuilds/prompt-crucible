@@ -755,7 +755,7 @@
       <div class="status-sep">|</div>
       <div class="status-item"><span class="label">RUN:</span> <span id="runIdValue" class="value">—</span></div>
       <div class="status-sep">|</div>
-      <div class="status-item"><span class="label">MODEL:</span> <span id="modelValue" class="value">qwen2.5:14b</span></div>
+      <div class="status-item"><span class="label">MODEL:</span> <span id="modelValue" class="value">qwen2.5:7b</span></div>
       <div class="status-sep">|</div>
       <div class="status-item"><span class="label">STATUS:</span> <span id="statusValue" class="status-badge status-idle">IDLE</span></div>
       <div class="status-sep">|</div>
@@ -864,7 +864,7 @@
       reconnectTimer: null,
       run: {
         run_id: "—",
-        model: "qwen2.5:14b",
+        model: "qwen2.5:7b",
         status: "idle",
         started_at: null,
         elapsed_seconds: 0,
@@ -984,7 +984,7 @@
 
     function renderRunMeta() {
       els.runIdValue.textContent = state.run.run_id || "—";
-      els.modelValue.textContent = state.run.model || "qwen2.5:14b";
+      els.modelValue.textContent = state.run.model || "qwen2.5:7b";
       els.elapsedValue.textContent = formatElapsed(state.run.started_at);
 
       const badge = els.statusValue;
