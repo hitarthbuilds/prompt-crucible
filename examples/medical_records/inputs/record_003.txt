@@ -1,0 +1,21 @@
+ER NOTE
+pt id: ED-1197
+dos 2024-06-02
+
+cc: sob + cp x2h
+
+hpi: 67yo m, hx htn, dm2. sudden chest tightness while walking, mild diaphoresis. no syncope.
+
+exam: bp 168/102, pulse 104, sats 95% ra. anxious, bibasal crackles mild.
+
+imp:
+- r/o acs
+- hypertensive urgency
+
+meds:
+asa 325 mg po once in ed
+ntg 0.4 mg sl q5min prn cp
+metoprolol 25 mg po bid
+
+dispo / fu:
+admit tele. cards eval this am.

@@ -1,0 +1,24 @@
+TechSupply Co.
+145 Industrial Avenue, Bengaluru 560048
+GSTIN: 29AAACT5589L1Z7
+
+Invoice issued to:
+Acme Corp
+Accounts Payable Department
+22 Residency Road, Bengaluru 560025
+
+Invoice No. INV-2024-0891
+Invoice Date: 14 March 2024
+Payment Terms: Net 15
+
+Thank you for your purchase. The following items were supplied as per your purchase order:
+
+1. ErgoMesh Office Chair - Qty 6 @ INR 8,500.00 each ........ INR 51,000.00
+2. UltraView 27-inch Monitor - Qty 4 @ INR 15,750.00 each ... INR 63,000.00
+3. HDMI Cable 2m - Qty 10 @ INR 450.00 each ................. INR 4,500.00
+
+Subtotal before tax: INR 118,500.00
+GST @ 18%: INR 21,330.00
+Grand Total Due: INR 139,830.00
+
+Please remit payment by bank transfer quoting invoice number INV-2024-0891.

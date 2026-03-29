@@ -1,0 +1,18 @@
+CloudServices Ltd
+Monthly Subscription Billing Statement
+
+Bill To: Acme Corp - Platform Engineering
+Statement Ref: CSL-MAR-4427
+Invoice Date 2024-03-31
+
+Service period: 15 Mar 2024 to 31 Mar 2024
+
+Pro Plan subscription (prorated 17 days)     1 x USD 248.50     USD 248.50
+Managed backup add-on                         1 x USD 79.00      USD 79.00
+One-time onboarding setup fee                1 x USD 300.00     USD 300.00
+
+Subtotal USD 627.50
+Tax USD 112.95
+Amount Due USD 740.45
+
+Please make payment within 7 days to keep services active.

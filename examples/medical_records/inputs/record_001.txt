@@ -1,0 +1,18 @@
+Patient ID: PT-44018
+Visit Date: 2024-04-08
+
+S:
+Patient presents for follow-up of elevated blood pressure and intermittent morning headaches.
+Reports missing medication for the past two weeks. Denies chest pain, shortness of breath, or vision changes.
+
+O:
+BP 154/96, HR 82, afebrile. Cardiovascular exam normal. No focal neurologic deficits.
+
+A:
+1. Essential hypertension, uncontrolled
+2. Headache likely secondary to elevated blood pressure
+
+P:
+Start amlodipine 5 mg by mouth once daily.
+Advise low-salt diet and home BP monitoring.
+Follow-up in 4 weeks for blood pressure review.

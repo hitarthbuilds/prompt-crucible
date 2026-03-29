@@ -1,0 +1,2098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptCrucible</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #0d0d0d;
+      --border: #1a1a1a;
+      --primary: #00ff88;
+      --secondary: #00aaff;
+      --warning: #ffaa00;
+      --error: #ff4444;
+      --text: #e0e0e0;
+      --muted: #444444;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "JetBrains Mono", monospace !important;
+      border-radius: 0 !important;
+    }
+
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      width: 100%;
+      background: #0a0a0a;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      background: #0a0a0a;
+    }
+
+    *::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: #050505;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: #1a1a1a;
+      border: 1px solid #050505;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: #2a2a2a;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 92px;
+      display: flex;
+      flex-direction: column;
+      justify-content: stretch;
+      padding: 0;
+      background: #0a0a0a;
+      border-bottom: 1px solid var(--border);
+      z-index: 20;
+    }
+
+    .status-strip {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      white-space: nowrap;
+      background: #0a0a0a;
+      font-size: 13px;
+    }
+
+    .status-brand {
+      color: var(--primary);
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .status-sep {
+      color: var(--muted);
+    }
+
+    .status-item {
+      color: var(--text);
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .status-item .label {
+      color: var(--muted);
+    }
+
+    .status-item .value {
+      color: var(--text);
+    }
+
+    .ws-field {
+      margin-left: auto;
+    }
+
+    .tab-nav {
+      display: flex;
+      gap: 0;
+      height: 47px;
+      width: 100%;
+      border-bottom: 1px solid var(--border);
+      background: #0d0d0d;
+    }
+
+    .tab-button {
+      flex: 1;
+      border: 0;
+      border-right: 1px solid var(--border);
+      border-top: 0;
+      border-bottom: 0;
+      background: #0d0d0d;
+      color: var(--muted);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .tab-button:last-child {
+      border-right: 0;
+    }
+
+    .tab-button.active {
+      color: var(--primary);
+      background: #101010;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--error);
+    }
+
+    .status-dot.connected {
+      background: var(--primary);
+    }
+
+    .viewport {
+      position: relative;
+      margin-top: 92px;
+      height: calc(100vh - 92px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #0a0a0a;
+    }
+
+    .tab-page {
+      display: none;
+      height: 100%;
+      min-height: 0;
+      padding: 16px;
+    }
+
+    .tab-page.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .surface {
+      background: #0d0d0d;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .surface::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(
+        rgba(255, 255, 255, 0.02) 1px,
+        transparent 1px
+      );
+      background-size: 100% 22px;
+      opacity: 0.18;
+    }
+
+    .section-title {
+      color: var(--secondary);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 170, 255, 0.04);
+    }
+
+    .live-layout {
+      display: flex;
+      flex: 1;
+      gap: 16px;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .terminal-stack {
+      flex: 0 0 55%;
+      width: 55%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .meta-card {
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.25);
+      min-height: 72px;
+      padding: 10px 12px;
+    }
+
+    .meta-label {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-bottom: 10px;
+    }
+
+    .meta-value {
+      color: var(--text);
+      font-size: 13px;
+      word-break: break-all;
+    }
+
+    .status-badge {
+      color: #444444;
+    }
+
+    .status-badge.status-running {
+      color: var(--primary);
+      animation: statusBlink 1.1s steps(2, start) infinite;
+    }
+
+    .status-badge.status-complete {
+      color: var(--secondary);
+    }
+
+    .status-badge.status-idle {
+      color: #444444;
+    }
+
+    @keyframes statusBlink {
+      50% {
+        opacity: 0.45;
+      }
+    }
+
+    .code-panel,
+    .log-panel,
+    .viz-block,
+    .diff-shell,
+    .history-shell,
+    .review-shell {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .code-panel {
+      flex: 1 1 auto;
+    }
+
+    .log-panel {
+      flex: 0 0 38%;
+    }
+
+    .viz-block {
+      flex: 1 1 0;
+    }
+
+    .panel-body {
+      flex: 1 1 auto;
+      padding: 12px 14px;
+      overflow: auto;
+      min-height: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .line-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .line-row {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 12px;
+      padding: 2px 4px;
+      min-height: 20px;
+      align-items: start;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .line-no {
+      color: var(--muted);
+      text-align: right;
+      user-select: none;
+    }
+
+    .line-text {
+      color: var(--primary);
+    }
+
+    .activity-log {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      text-align: left;
+    }
+
+    .log-entry {
+      border-left: 1px solid var(--border);
+      padding-left: 10px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .log-entry.pass {
+      color: var(--primary);
+      border-left-color: rgba(0, 255, 136, 0.65);
+    }
+
+    .log-entry.fail {
+      color: #ff6666;
+      border-left-color: rgba(255, 68, 68, 0.65);
+    }
+
+    .log-entry.agent {
+      color: #6fd5ff;
+      border-left-color: rgba(0, 170, 255, 0.65);
+    }
+
+    .log-entry.info {
+      color: #9a9a9a;
+    }
+
+    .log-time {
+      color: var(--muted);
+      margin-right: 8px;
+    }
+
+    .viz-stack {
+      flex: 0 0 45%;
+      width: 45%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .canvas-shell {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      background: #0a0a0a;
+    }
+
+    .canvas-shell canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    .score-tooltip {
+      position: absolute;
+      pointer-events: none;
+      display: none;
+      min-width: 180px;
+      border: 1px solid var(--border);
+      background: #0d0d0d;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 11px;
+      white-space: pre-line;
+      z-index: 5;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.22);
+      flex-wrap: wrap;
+    }
+
+    .toolbar label {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    select,
+    button,
+    textarea {
+      border: 1px solid var(--border);
+      background: #0a0a0a;
+      color: var(--text);
+      outline: none;
+      font-size: 12px;
+      font-family: "JetBrains Mono", monospace;
+    }
+
+    select,
+    button {
+      height: 34px;
+      padding: 0 12px;
+    }
+
+    button {
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .accent-button {
+      color: var(--primary);
+      background: #0d0d0d;
+    }
+
+    .warn-button {
+      color: var(--warning);
+      background: #0d0d0d;
+    }
+
+    .danger-button {
+      color: #ff7d7d;
+      background: #0d0d0d;
+    }
+
+    .diff-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 16px;
+      min-height: 0;
+      flex: 1;
+    }
+
+    .diff-banner {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 170, 255, 0.05);
+    }
+
+    .diff-summary {
+      color: var(--secondary);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .diff-avoided {
+      color: #8f8f8f;
+      font-size: 11px;
+    }
+
+    .diff-column {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .diff-panel-title {
+      color: var(--primary);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 255, 136, 0.04);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .diff-lines {
+      flex: 1;
+      overflow: auto;
+      padding: 10px 12px;
+    }
+
+    .diff-row {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 12px;
+      padding: 4px 6px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .diff-row.added {
+      background: rgba(0, 255, 136, 0.08);
+      color: var(--primary);
+    }
+
+    .diff-row.removed {
+      background: rgba(255, 68, 68, 0.08);
+      color: #ff6666;
+    }
+
+    .history-shell {
+      height: 100%;
+    }
+
+    .history-title {
+      color: var(--primary);
+      font-size: 22px;
+      letter-spacing: 0.16em;
+      padding: 18px 18px 10px;
+    }
+
+    .history-table-wrap {
+      padding: 0 18px 18px;
+      overflow: auto;
+      min-height: 0;
+      flex: 1;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: rgba(0, 0, 0, 0.14);
+    }
+
+    .data-table th,
+    .data-table td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+    }
+
+    .data-table th {
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 10px;
+      position: sticky;
+      top: 0;
+      background: #0b0b0b;
+      z-index: 2;
+    }
+
+    .data-table tbody tr {
+      cursor: pointer;
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(0, 170, 255, 0.04);
+    }
+
+    .delta-positive {
+      color: var(--primary);
+    }
+
+    .delta-negative {
+      color: #ff6666;
+    }
+
+    .delta-neutral {
+      color: #7d7d7d;
+    }
+
+    .history-detail {
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid var(--border);
+    }
+
+    .history-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .history-detail-card {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      background: #070707;
+    }
+
+    .history-detail-card .k {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 8px;
+    }
+
+    .history-detail-card .v {
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .review-shell {
+      height: 100%;
+    }
+
+    .review-progress {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--secondary);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .review-layout {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .review-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .review-output {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 12px 14px;
+      color: #7fe2ff;
+      white-space: pre-wrap;
+      word-break: break-word;
+      position: relative;
+      z-index: 1;
+    }
+
+    .review-editor {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      resize: none;
+      padding: 12px 14px;
+      color: #7fe2ff;
+      background: transparent;
+      border: 0;
+      display: none;
+    }
+
+    .review-editor.visible {
+      display: block;
+    }
+
+    .review-output.hidden {
+      display: none;
+    }
+
+    .review-actions {
+      display: flex;
+      gap: 12px;
+      padding: 0 16px 16px;
+    }
+
+    .review-actions button {
+      flex: 1;
+    }
+
+    .placeholder {
+      color: #444444;
+      padding: 24px;
+      border: 1px solid var(--border);
+      margin: 16px;
+    }
+
+    @media (max-width: 1200px) {
+      .topbar {
+        height: auto;
+      }
+
+      .viewport {
+        margin-top: 120px;
+        height: calc(100vh - 120px);
+      }
+
+      .live-layout,
+      .review-layout,
+      .diff-layout {
+        flex-direction: column;
+        grid-template-columns: 1fr;
+      }
+
+      .viz-stack {
+        min-height: 680px;
+        width: 100%;
+      }
+
+      .terminal-stack {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="status-strip">
+      <div class="status-brand">⚗ PROMPT CRUCIBLE</div>
+      <div class="status-sep">|</div>
+      <div class="status-item"><span class="label">RUN:</span> <span id="runIdValue" class="value">—</span></div>
+      <div class="status-sep">|</div>
+      <div class="status-item"><span class="label">MODEL:</span> <span id="modelValue" class="value">qwen2.5:14b</span></div>
+      <div class="status-sep">|</div>
+      <div class="status-item"><span class="label">STATUS:</span> <span id="statusValue" class="status-badge status-idle">IDLE</span></div>
+      <div class="status-sep">|</div>
+      <div class="status-item"><span class="label">TIME:</span> <span id="elapsedValue" class="value">00:00</span></div>
+      <div class="status-sep ws-field">|</div>
+      <div class="status-item"><span class="label">WS:</span> <span id="connectionDot" class="status-dot"></span> <span id="connectionText" class="value">DISCONNECTED</span></div>
+    </div>
+    <nav class="tab-nav">
+      <button class="tab-button active" data-tab="live">Live Run</button>
+      <button class="tab-button" data-tab="diff">Prompt Diff</button>
+      <button class="tab-button" data-tab="history">History</button>
+      <button class="tab-button" data-tab="review">Ground Truth Review</button>
+    </nav>
+  </header>
+
+  <main class="viewport">
+    <section id="tab-live" class="tab-page active">
+      <div class="live-layout">
+        <div class="terminal-stack">
+          <div class="surface code-panel">
+            <div class="section-title">CURRENT PROMPT</div>
+            <div id="promptPanel" class="panel-body"></div>
+          </div>
+
+          <div class="surface log-panel">
+            <div class="section-title">AGENT ACTIVITY</div>
+            <div id="activityLog" class="panel-body activity-log"></div>
+          </div>
+        </div>
+
+        <div class="viz-stack">
+          <div class="surface viz-block">
+            <div class="section-title">AGENT GRAPH / BLACKBOARD</div>
+            <div id="agentGraphCanvas" class="canvas-shell"></div>
+          </div>
+
+          <div class="surface viz-block">
+            <div class="section-title">3D SCORE TRAJECTORY</div>
+            <div id="scoreGraphCanvas" class="canvas-shell">
+              <div id="scoreTooltip" class="score-tooltip"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-diff" class="tab-page">
+      <div class="surface diff-shell" style="height:100%;">
+        <div class="toolbar">
+          <label for="diffSelectA">Iteration A</label>
+          <select id="diffSelectA"></select>
+          <label for="diffSelectB">Iteration B</label>
+          <select id="diffSelectB"></select>
+        </div>
+        <div class="diff-banner">
+          <div id="diffSummary" class="diff-summary">No prompt deltas loaded.</div>
+          <div id="diffAvoided" class="diff-avoided">Awaiting iteration history.</div>
+        </div>
+        <div class="diff-layout">
+          <div class="surface diff-column">
+            <div id="diffTitleA" class="diff-panel-title">Iteration A</div>
+            <div id="diffPanelA" class="diff-lines"></div>
+          </div>
+          <div class="surface diff-column">
+            <div id="diffTitleB" class="diff-panel-title">Iteration B</div>
+            <div id="diffPanelB" class="diff-lines"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-history" class="tab-page">
+      <div class="surface history-shell">
+        <div class="history-title">⚗ EXPERIMENT HISTORY</div>
+        <div id="historyTableWrap" class="history-table-wrap"></div>
+      </div>
+    </section>
+
+    <section id="tab-review" class="tab-page">
+      <div class="surface review-shell">
+        <div id="reviewProgress" class="review-progress">Reviewing case 0 of 0</div>
+        <div class="review-layout">
+          <div class="surface review-panel">
+            <div class="section-title">INPUT CHUNK</div>
+            <div id="reviewInput" class="panel-body"></div>
+          </div>
+          <div class="surface review-panel">
+            <div class="section-title">JSON OUTPUT</div>
+            <div id="reviewOutput" class="review-output"></div>
+            <textarea id="reviewEditor" class="review-editor" spellcheck="false"></textarea>
+          </div>
+        </div>
+        <div class="review-actions">
+          <button id="approveButton" class="accent-button">[A] Approve</button>
+          <button id="editButton" class="warn-button">[E] Edit</button>
+          <button id="rejectButton" class="danger-button">[R] Reject</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    const state = {
+      socket: null,
+      reconnectTimer: null,
+      run: {
+        run_id: "—",
+        model: "qwen2.5:14b",
+        status: "idle",
+        started_at: null,
+        elapsed_seconds: 0,
+        current_prompt: ""
+      },
+      activeAgent: {
+        agent: "idle",
+        status_text: "idle"
+      },
+      logs: [],
+      iterations: [],
+      diffIterations: [],
+      history: [],
+      expandedRunId: null,
+      expandedRun: null,
+      reviewCases: [],
+      reviewIndex: 0,
+      approvedCases: [],
+      reviewEditing: false
+    };
+
+    const els = {};
+    let agentGraph = null;
+    let scoreGraph = null;
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function formatElapsed(startedAt) {
+      if (!startedAt) {
+        return "00:00";
+      }
+      const started = new Date(startedAt);
+      const seconds = Math.max(0, Math.floor((Date.now() - started.getTime()) / 1000));
+      const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
+      const ss = String(seconds % 60).padStart(2, "0");
+      return `${mm}:${ss}`;
+    }
+
+    function nowClock() {
+      const date = new Date();
+      return date.toLocaleTimeString("en-GB", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    }
+
+    function statusClass(status) {
+      if (status === "running" || status === "continue") {
+        return "status-running";
+      }
+      if (status === "idle" || !status) {
+        return "status-idle";
+      }
+      if (status === "error") {
+        return "status-idle";
+      }
+      return "status-complete";
+    }
+
+    function scoreColor(score) {
+      if (score <= 0.5) {
+        const t = Math.max(0, score / 0.5);
+        return new THREE.Color().lerpColors(
+          new THREE.Color("#ff4444"),
+          new THREE.Color("#ffaa00"),
+          t
+        );
+      }
+      const t = Math.min(1, (score - 0.5) / 0.5);
+      return new THREE.Color().lerpColors(
+        new THREE.Color("#ffaa00"),
+        new THREE.Color("#00ff88"),
+        t
+      );
+    }
+
+    function renderLineList(target, text, colorClass = "line-text") {
+      const lines = String(text || "").split("\n");
+      if (!text) {
+        target.innerHTML = '<div class="placeholder">No content available.</div>';
+        return;
+      }
+      target.innerHTML = `
+        <div class="line-list">
+          ${lines.map((line, index) => `
+            <div class="line-row">
+              <div class="line-no">${index + 1}</div>
+              <div class="${colorClass}">${escapeHtml(line)}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function highlightJson(jsonText) {
+      return escapeHtml(jsonText)
+        .replace(/(&quot;.*?&quot;)(\s*:)/g, '<span style="color:#6fd5ff;">$1</span><span style="color:#7d7d7d;">$2</span>')
+        .replace(/\b(true|false|null)\b/g, '<span style="color:#ffaa00;">$1</span>')
+        .replace(/(-?\d+(\.\d+)?)/g, '<span style="color:#00ff88;">$1</span>');
+    }
+
+    function renderPrompt() {
+      renderLineList(els.promptPanel, state.run.current_prompt || "");
+    }
+
+    function renderRunMeta() {
+      els.runIdValue.textContent = state.run.run_id || "—";
+      els.modelValue.textContent = state.run.model || "qwen2.5:14b";
+      els.elapsedValue.textContent = formatElapsed(state.run.started_at);
+
+      const badge = els.statusValue;
+      const statusText = state.run.status === "idle" || !state.run.status
+        ? "IDLE"
+        : state.run.status === "running" || state.run.status === "continue"
+          ? "RUNNING"
+          : "COMPLETE";
+      badge.className = `status-badge ${statusClass(state.run.status)}`;
+      badge.textContent = statusText;
+    }
+
+    function prependLog(entry) {
+      state.logs = [entry, ...state.logs].slice(0, 250);
+      renderLogs();
+    }
+
+    function renderLogs() {
+      if (!state.logs.length) {
+        els.activityLog.innerHTML = '<div class="placeholder">Awaiting run...</div>';
+        return;
+      }
+      els.activityLog.innerHTML = state.logs.map((entry) => `
+        <div class="log-entry ${escapeHtml(entry.level || "info")}">
+          <span class="log-time">[${escapeHtml(entry.timestamp || nowClock())}]</span>
+          <span>${escapeHtml(entry.message || "")}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderDiffSelectors() {
+      const iterations = state.diffIterations.length ? state.diffIterations : state.iterations;
+      const buildOptions = iterations.map((iteration) => {
+        const label = `Iteration ${iteration.iteration} · ${Number(iteration.score || 0).toFixed(2)}`;
+        return `<option value="${iteration.iteration}">${escapeHtml(label)}</option>`;
+      }).join("");
+
+      els.diffSelectA.innerHTML = buildOptions;
+      els.diffSelectB.innerHTML = buildOptions;
+
+      if (!iterations.length) {
+        els.diffSummary.textContent = "No prompt deltas loaded.";
+        els.diffAvoided.textContent = "Awaiting iteration history.";
+        els.diffPanelA.innerHTML = '<div class="placeholder">No iteration data.</div>';
+        els.diffPanelB.innerHTML = '<div class="placeholder">No iteration data.</div>';
+        return;
+      }
+
+      if (!els.diffSelectA.value) {
+        els.diffSelectA.value = String(iterations[0].iteration);
+      }
+      if (!els.diffSelectB.value) {
+        els.diffSelectB.value = String(iterations[iterations.length - 1].iteration);
+      }
+      renderDiff();
+    }
+
+    function getDiffSelection() {
+      const iterations = state.diffIterations.length ? state.diffIterations : state.iterations;
+      const a = iterations.find((item) => String(item.iteration) === String(els.diffSelectA.value)) || iterations[0];
+      const b = iterations.find((item) => String(item.iteration) === String(els.diffSelectB.value)) || iterations[iterations.length - 1];
+      return { a, b };
+    }
+
+    function renderDiffColumn(target, textA, textB, side) {
+      const linesA = String(textA || "").split("\n");
+      const linesB = String(textB || "").split("\n");
+      const max = Math.max(linesA.length, linesB.length);
+      const rows = [];
+      for (let i = 0; i < max; i += 1) {
+        const lineA = linesA[i] ?? "";
+        const lineB = linesB[i] ?? "";
+        let cls = "";
+        let text = "";
+        if (side === "a") {
+          text = lineA;
+          if (lineA !== lineB) {
+            cls = "removed";
+          }
+        } else {
+          text = lineB;
+          if (lineA !== lineB) {
+            cls = "added";
+          }
+        }
+        rows.push(`
+          <div class="diff-row ${cls}">
+            <div class="line-no">${i + 1}</div>
+            <div>${escapeHtml(text)}</div>
+          </div>
+        `);
+      }
+      target.innerHTML = rows.join("");
+    }
+
+    function renderDiff() {
+      const selection = getDiffSelection();
+      if (!selection.a || !selection.b) {
+        return;
+      }
+      const promptA = selection.a.prompt || "";
+      const promptB = selection.b.prompt || "";
+      els.diffTitleA.textContent = `Iteration ${selection.a.iteration}`;
+      els.diffTitleB.textContent = `Iteration ${selection.b.iteration}`;
+      els.diffSummary.textContent = selection.b.change_summary || "No optimizer summary available.";
+      els.diffAvoided.textContent = selection.b.what_was_avoided || "No avoidance notes recorded.";
+      renderDiffColumn(els.diffPanelA, promptA, promptB, "a");
+      renderDiffColumn(els.diffPanelB, promptA, promptB, "b");
+    }
+
+    async function loadHistory() {
+      try {
+        const response = await fetch("/api/history");
+        const history = await response.json();
+        state.history = Array.isArray(history) ? history : [];
+      } catch (error) {
+        state.history = [];
+      }
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const wrap = els.historyTableWrap;
+      if (!state.history.length) {
+        wrap.innerHTML = '<div class="placeholder">No experiment history available yet.</div>';
+        return;
+      }
+
+      const rows = state.history.map((run) => {
+        const initial = Number(run.initial_score || 0);
+        const final = Number(run.final_score || 0);
+        const delta = final - initial;
+        const deltaClass = delta > 0 ? "delta-positive" : delta < 0 ? "delta-negative" : "delta-neutral";
+        const baseRow = `
+          <tr data-run-id="${escapeHtml(run.run_id)}">
+            <td>${escapeHtml(String(run.run_id || "").slice(0, 8))}</td>
+            <td>${escapeHtml(String(run.started_at || "").replace("T", " ").slice(0, 19))}</td>
+            <td>${initial.toFixed(2)}</td>
+            <td>${final.toFixed(2)}</td>
+            <td class="${deltaClass}">${delta >= 0 ? "+" : ""}${delta.toFixed(2)}</td>
+            <td>${escapeHtml(String(run.iterations || 0))}</td>
+            <td>${escapeHtml(String(run.termination_reason || ""))}</td>
+          </tr>
+        `;
+
+        if (state.expandedRunId === run.run_id && state.expandedRun) {
+          const detail = `
+            <tr>
+              <td colspan="7">
+                ${renderHistoryDetailHtml(state.expandedRun)}
+              </td>
+            </tr>
+          `;
+          return `${baseRow}${detail}`;
+        }
+
+        return baseRow;
+      }).join("");
+
+      wrap.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Run ID</th>
+              <th>Date</th>
+              <th>Init</th>
+              <th>Final</th>
+              <th>Δ</th>
+              <th>Iters</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+
+      wrap.querySelectorAll("tbody tr[data-run-id]").forEach((row) => {
+        row.addEventListener("click", async () => {
+          const runId = row.getAttribute("data-run-id");
+          await toggleHistoryRun(runId);
+        });
+      });
+    }
+
+    function renderHistoryDetailHtml(run) {
+      const experiment = run.experiment || {};
+      const iterations = run.iterations || [];
+      return `
+        <div class="history-detail">
+          <div class="history-detail-grid">
+            <div class="history-detail-card">
+              <div class="k">Run ID</div>
+              <div class="v">${escapeHtml(experiment.run_id || "")}</div>
+            </div>
+            <div class="history-detail-card">
+              <div class="k">Final Prompt</div>
+              <div class="v">${escapeHtml((experiment.final_prompt || "").slice(0, 220))}</div>
+            </div>
+            <div class="history-detail-card">
+              <div class="k">Termination</div>
+              <div class="v">${escapeHtml(experiment.termination_reason || "")}</div>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Iteration</th>
+                <th>Score</th>
+                <th>Pass</th>
+                <th>Fail</th>
+                <th>Failure Class</th>
+                <th>Change Summary</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${iterations.map((iteration) => `
+                <tr>
+                  <td>${escapeHtml(String(iteration.iteration_number || iteration.iteration || ""))}</td>
+                  <td>${Number(iteration.overall_score ?? iteration.score ?? 0).toFixed(2)}</td>
+                  <td>${escapeHtml(String(iteration.pass_count || 0))}</td>
+                  <td>${escapeHtml(String(iteration.fail_count || 0))}</td>
+                  <td>${escapeHtml(String(iteration.failure_class || "none"))}</td>
+                  <td>${escapeHtml(String(iteration.change_summary || ""))}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function toggleHistoryRun(runId) {
+      if (state.expandedRunId === runId) {
+        state.expandedRunId = null;
+        state.expandedRun = null;
+        renderHistory();
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/run/${encodeURIComponent(runId)}`);
+        const data = await response.json();
+        state.expandedRunId = runId;
+        state.expandedRun = data;
+        state.diffIterations = (data.iterations || []).map((iteration) => ({
+          iteration: iteration.iteration_number || iteration.iteration,
+          prompt: iteration.prompt,
+          score: iteration.overall_score ?? iteration.score,
+          change_summary: iteration.change_summary,
+          what_was_avoided: iteration.what_was_avoided || ""
+        }));
+        renderHistory();
+        renderDiffSelectors();
+      } catch (error) {
+        state.expandedRunId = null;
+        state.expandedRun = null;
+        renderHistory();
+      }
+    }
+
+    async function loadReview() {
+      try {
+        const response = await fetch("/api/review");
+        const data = await response.json();
+        state.reviewCases = Array.isArray(data.cases) ? data.cases : [];
+      } catch (error) {
+        state.reviewCases = [];
+      }
+      state.reviewIndex = 0;
+      state.approvedCases = [];
+      state.reviewEditing = false;
+      renderReview();
+    }
+
+    function currentReviewCase() {
+      return state.reviewCases[state.reviewIndex] || null;
+    }
+
+    function renderReview() {
+      const total = state.reviewCases.length;
+      const current = currentReviewCase();
+      els.reviewProgress.textContent = `Reviewing case ${Math.min(state.reviewIndex + 1, total || 0)} of ${total}`;
+
+      if (!current) {
+        els.reviewInput.innerHTML = '<div class="placeholder">No review cases loaded.</div>';
+        els.reviewOutput.innerHTML = "Awaiting cases.";
+        els.reviewEditor.value = "";
+        return;
+      }
+
+      renderLineList(els.reviewInput, current.input || current.input_text || "");
+
+      const outputObject = current.expected_output || current.actual_output || current.output || {};
+      const pretty = JSON.stringify(outputObject, null, 2);
+      els.reviewOutput.innerHTML = highlightJson(pretty);
+      if (!state.reviewEditing) {
+        els.reviewEditor.value = pretty;
+      }
+    }
+
+    async function saveApprovedCases() {
+      try {
+        await fetch("/api/approve", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ cases: state.approvedCases })
+        });
+      } catch (error) {
+      }
+    }
+
+    async function advanceReview(decision) {
+      const current = currentReviewCase();
+      if (!current) {
+        return;
+      }
+
+      if (decision !== "reject") {
+        let parsed = current.expected_output || current.actual_output || current.output || {};
+        if (state.reviewEditing) {
+          try {
+            parsed = JSON.parse(els.reviewEditor.value);
+          } catch (error) {
+            alert("Edited JSON is invalid.");
+            return;
+          }
+        }
+        state.approvedCases.push({
+          case_id: current.case_id || `case-${state.reviewIndex + 1}`,
+          input: current.input || current.input_text || "",
+          expected_output: parsed
+        });
+        await saveApprovedCases();
+      }
+
+      state.reviewIndex += 1;
+      state.reviewEditing = false;
+      els.reviewEditor.classList.remove("visible");
+      els.reviewOutput.classList.remove("hidden");
+      renderReview();
+    }
+
+    function toggleReviewEdit() {
+      const current = currentReviewCase();
+      if (!current) {
+        return;
+      }
+      state.reviewEditing = !state.reviewEditing;
+      els.reviewEditor.classList.toggle("visible", state.reviewEditing);
+      els.reviewOutput.classList.toggle("hidden", state.reviewEditing);
+      if (state.reviewEditing) {
+        const pretty = JSON.stringify(
+          current.expected_output || current.actual_output || current.output || {},
+          null,
+          2
+        );
+        els.reviewEditor.value = pretty;
+        els.reviewEditor.focus();
+      }
+    }
+
+    function createTextSprite(text, color = "#e0e0e0", size = 44, width = 1024, height = 256) {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.font = `700 ${size}px JetBrains Mono`;
+      context.fillStyle = color;
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.shadowColor = color;
+      context.shadowBlur = 10;
+      context.fillText(text, canvas.width / 2, canvas.height / 2);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      const material = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true
+      });
+      const sprite = new THREE.Sprite(material);
+      sprite.scale.set(2.8, 0.7, 1);
+      return sprite;
+    }
+
+    function updateSprite(sprite, text, color = "#e0e0e0", size = 44) {
+      const canvas = sprite.material.map.image;
+      const context = canvas.getContext("2d");
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.font = `700 ${size}px JetBrains Mono`;
+      context.fillStyle = color;
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.shadowColor = color;
+      context.shadowBlur = 10;
+      context.fillText(text, canvas.width / 2, canvas.height / 2);
+      sprite.material.map.needsUpdate = true;
+    }
+
+    function initAgentGraph() {
+      const container = els.agentGraphCanvas;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(window.devicePixelRatio || 1);
+      renderer.setClearColor(0x000000, 0);
+      container.appendChild(renderer.domElement);
+
+      const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+      const point = new THREE.PointLight(0xffffff, 0.55, 20);
+      point.position.set(0, 3, 5);
+      scene.add(ambient, point);
+
+      const root = new THREE.Group();
+      scene.add(root);
+
+      const boardGeometry = new THREE.BoxGeometry(2.6, 0.22, 1.25);
+      const boardMaterial = new THREE.MeshBasicMaterial({
+        color: 0x1a1a1a
+      });
+      const blackboard = new THREE.Mesh(boardGeometry, boardMaterial);
+      blackboard.position.set(0, -1.2, 0);
+      root.add(blackboard);
+
+      const boardEdges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(boardGeometry),
+        new THREE.LineBasicMaterial({ color: 0x333333 })
+      );
+      boardEdges.position.copy(blackboard.position);
+      root.add(boardEdges);
+
+      const boardLabel = createTextSprite("BLACKBOARD", "#ffffff", 52, 1024, 256);
+      boardLabel.position.set(0, -0.62, 0);
+      root.add(boardLabel);
+
+      const positions = {
+        evaluator: new THREE.Vector3(-2, 0, 0),
+        diagnoser: new THREE.Vector3(0, 1.5, 0),
+        optimizer: new THREE.Vector3(2, 0, 0)
+      };
+      const colors = {
+        evaluator: 0x00aaff,
+        diagnoser: 0xffaa00,
+        optimizer: 0x00ff88
+      };
+      const labels = {
+        evaluator: "EVALUATOR",
+        diagnoser: "DIAGNOSER",
+        optimizer: "OPTIMIZER"
+      };
+
+      const nodes = {};
+      Object.keys(positions).forEach((key) => {
+        const group = new THREE.Group();
+        group.position.copy(positions[key]);
+
+        const sphere = new THREE.Mesh(
+          new THREE.SphereGeometry(0.33, 32, 32),
+          new THREE.MeshStandardMaterial({
+            color: 0x0d0d0d,
+            emissive: colors[key],
+            emissiveIntensity: 0.28,
+            metalness: 0.1,
+            roughness: 0.32
+          })
+        );
+        group.add(sphere);
+
+        const halo = new THREE.Mesh(
+          new THREE.SphereGeometry(0.47, 20, 20),
+          new THREE.MeshBasicMaterial({
+            color: colors[key],
+            transparent: true,
+            opacity: 0.1
+          })
+        );
+        group.add(halo);
+
+        const label = createTextSprite(labels[key], "#ffffff", 48);
+        label.position.set(0, 0.88, 0);
+        group.add(label);
+
+        const status = createTextSprite("idle", "#ffffff", 28);
+        status.scale.set(1.8, 0.42, 1);
+        status.position.set(0, -0.78, 0);
+        group.add(status);
+
+        const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+          positions[key],
+          new THREE.Vector3(0, -1.2, 0)
+        ]);
+        const lineMaterial = new THREE.LineBasicMaterial({
+          color: 0x333333
+        });
+        root.add(new THREE.Line(lineGeometry, lineMaterial));
+        root.add(group);
+
+        nodes[key] = {
+          group,
+          sphere,
+          halo,
+          label,
+          status,
+          baseColor: colors[key],
+          pulseOffset: Math.random() * Math.PI * 2,
+          active: false
+        };
+      });
+
+      const stateful = {
+        container,
+        scene,
+        camera,
+        renderer,
+        root,
+        nodes,
+        theta: Math.PI / 2,
+        phi: 1.2490457723982544,
+        radius: Math.sqrt(40),
+        dragging: false,
+        hovered: false,
+        lastX: 0,
+        lastY: 0,
+        particles: []
+      };
+
+      function updateCamera() {
+        const x = stateful.radius * Math.sin(stateful.phi) * Math.cos(stateful.theta);
+        const y = stateful.radius * Math.cos(stateful.phi);
+        const z = stateful.radius * Math.sin(stateful.phi) * Math.sin(stateful.theta);
+        stateful.camera.position.set(x, y, z);
+        stateful.camera.lookAt(0, 0, 0);
+      }
+
+      function addParticle(agent) {
+        const node = stateful.nodes[agent];
+        if (!node) {
+          return;
+        }
+        for (let i = 0; i < 14; i += 1) {
+          const particle = new THREE.Mesh(
+            new THREE.SphereGeometry(0.035, 10, 10),
+            new THREE.MeshBasicMaterial({
+              color: 0x00ff88,
+              transparent: true,
+              opacity: 0.8
+            })
+          );
+          particle.position.copy(node.group.position);
+          particle.userData.velocity = new THREE.Vector3(
+            (Math.random() - 0.5) * 0.03,
+            Math.random() * 0.05 + 0.01,
+            (Math.random() - 0.5) * 0.03
+          );
+          particle.userData.life = 1;
+          stateful.root.add(particle);
+          stateful.particles.push(particle);
+        }
+      }
+
+      stateful.addTrail = addParticle;
+      updateCamera();
+
+      container.addEventListener("mouseenter", () => {
+        stateful.hovered = true;
+      });
+      container.addEventListener("mouseleave", () => {
+        stateful.hovered = false;
+        stateful.dragging = false;
+      });
+      container.addEventListener("mousedown", (event) => {
+        stateful.dragging = true;
+        stateful.lastX = event.clientX;
+        stateful.lastY = event.clientY;
+      });
+      window.addEventListener("mouseup", () => {
+        stateful.dragging = false;
+      });
+      window.addEventListener("mousemove", (event) => {
+        if (!stateful.dragging) {
+          return;
+        }
+        const dx = event.clientX - stateful.lastX;
+        const dy = event.clientY - stateful.lastY;
+        stateful.lastX = event.clientX;
+        stateful.lastY = event.clientY;
+        stateful.theta -= dx * 0.008;
+        stateful.phi = Math.min(1.7, Math.max(0.65, stateful.phi + dy * 0.008));
+        updateCamera();
+      });
+
+      function resize() {
+        const rect = container.getBoundingClientRect();
+        stateful.camera.aspect = Math.max(1, rect.width) / Math.max(1, rect.height);
+        stateful.camera.updateProjectionMatrix();
+        stateful.renderer.setSize(Math.max(1, rect.width), Math.max(1, rect.height), false);
+      }
+
+      function animate(time) {
+        requestAnimationFrame(animate);
+        if (!stateful.hovered && !stateful.dragging) {
+          stateful.theta += 0.003;
+          updateCamera();
+        }
+
+        Object.keys(stateful.nodes).forEach((key) => {
+          const node = stateful.nodes[key];
+          const pulse = (Math.sin(time * 0.0022 + node.pulseOffset) + 1) * 0.5;
+          const activeScale = node.active ? 1 + pulse * 0.12 : 1;
+          node.group.scale.setScalar(activeScale);
+          node.sphere.material.emissiveIntensity = node.active ? 0.7 + pulse * 0.8 : 0.18;
+          node.halo.material.opacity = node.active ? 0.14 + pulse * 0.18 : 0.05;
+        });
+
+        stateful.particles = stateful.particles.filter((particle) => {
+          particle.position.add(particle.userData.velocity);
+          particle.userData.life -= 0.018;
+          particle.material.opacity = Math.max(0, particle.userData.life * 0.8);
+          if (particle.userData.life <= 0) {
+            stateful.root.remove(particle);
+            return false;
+          }
+          return true;
+        });
+
+        stateful.renderer.render(stateful.scene, stateful.camera);
+      }
+
+      resize();
+      requestAnimationFrame(animate);
+      return {
+        ...stateful,
+        resize,
+        updateStatus(agent, text, active) {
+          Object.keys(stateful.nodes).forEach((key) => {
+            if (active && key !== agent) {
+              stateful.nodes[key].active = false;
+              updateSprite(stateful.nodes[key].status, "idle", "#ffffff", 28);
+            }
+          });
+          if (stateful.nodes[agent]) {
+            stateful.nodes[agent].active = active;
+            updateSprite(stateful.nodes[agent].status, text, "#ffffff", 28);
+          }
+        },
+        setIdle() {
+          Object.keys(stateful.nodes).forEach((key) => {
+            stateful.nodes[key].active = false;
+            updateSprite(stateful.nodes[key].status, "idle", "#ffffff", 28);
+          });
+        }
+      };
+    }
+
+    function initScoreGraph() {
+      const container = els.scoreGraphCanvas;
+      const tooltip = els.scoreTooltip;
+      const scene = new THREE.Scene();
+      const camera = new THREE.OrthographicCamera(-1, 5, 1.2, -0.2, 0.1, 100);
+      camera.position.set(2, 0.5, 5);
+      camera.lookAt(2, 0.5, 0);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(window.devicePixelRatio || 1);
+      renderer.setClearColor(0x000000, 0);
+      container.appendChild(renderer.domElement);
+
+      const group = new THREE.Group();
+      scene.add(group);
+
+      const axisMaterial = new THREE.LineBasicMaterial({ color: 0x1a1a1a });
+      [0.25, 0.5, 0.75].forEach((y) => {
+        const geometry = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(0, y, 0),
+          new THREE.Vector3(4.2, y, 0)
+        ]);
+        group.add(new THREE.Line(geometry, axisMaterial));
+      });
+      const xAxis = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-0.05, 0, 0),
+        new THREE.Vector3(4.2, 0, 0)
+      ]);
+      const yAxis = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, -0.02, 0),
+        new THREE.Vector3(0, 1.05, 0)
+      ]);
+      group.add(new THREE.Line(xAxis, new THREE.LineBasicMaterial({ color: 0x333333 })));
+      group.add(new THREE.Line(yAxis, new THREE.LineBasicMaterial({ color: 0x333333 })));
+
+      const lineGeometry = new THREE.BufferGeometry();
+      const lineMaterial = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: false
+      });
+      const line = new THREE.Line(lineGeometry, lineMaterial);
+      group.add(line);
+
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2(-10, -10);
+      const points = [];
+      const data = [];
+
+      const graph = {
+        container,
+        tooltip,
+        scene,
+        camera,
+        renderer,
+        group,
+        line,
+        lineGeometry,
+        raycaster,
+        mouse,
+        points,
+        data,
+        placeholderData: [
+          { iteration: 0, score: 0.0, fail_count: 0, signal: "idle" },
+          { iteration: 1, score: 0.42, fail_count: 0, signal: "idle" },
+          { iteration: 2, score: 0.74, fail_count: 0, signal: "idle" }
+        ],
+        usingPlaceholder: true
+      };
+
+      function resize() {
+        const rect = container.getBoundingClientRect();
+        const aspect = Math.max(1, rect.width) / Math.max(1, rect.height);
+        camera.left = -1 * aspect;
+        camera.right = 5 * aspect;
+        camera.updateProjectionMatrix();
+        renderer.setSize(Math.max(1, rect.width), Math.max(1, rect.height), false);
+      }
+
+      function rebuildLine() {
+        if (!graph.points.length) {
+          graph.lineGeometry.setAttribute("position", new THREE.Float32BufferAttribute([], 3));
+          graph.lineGeometry.setAttribute("color", new THREE.Float32BufferAttribute([], 3));
+          return;
+        }
+        const positions = [];
+        const colors = [];
+        graph.points.forEach((point) => {
+          positions.push(point.position.x, point.position.y, point.position.z);
+          const color = scoreColor(point.userData.score);
+          colors.push(color.r, color.g, color.b);
+        });
+        graph.lineGeometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+        graph.lineGeometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+        graph.lineGeometry.computeBoundingSphere();
+      }
+
+      function setIterations(iterations) {
+        graph.points.forEach((point) => graph.group.remove(point));
+        graph.points.length = 0;
+        graph.data.length = 0;
+        const source = iterations.length ? iterations : graph.placeholderData;
+        graph.usingPlaceholder = !iterations.length;
+        source.forEach((iteration) => addIteration(iteration, false));
+        rebuildLine();
+      }
+
+      function addIteration(iteration, animate = true) {
+        if (graph.usingPlaceholder) {
+          graph.points.forEach((point) => graph.group.remove(point));
+          graph.points.length = 0;
+          graph.data.length = 0;
+          graph.usingPlaceholder = false;
+        }
+        const existing = graph.points.find((point) => point.userData.iteration === iteration.iteration);
+        if (existing) {
+          existing.userData = { ...existing.userData, ...iteration };
+          existing.userData.score = Number(iteration.score || 0);
+          return;
+        }
+        const score = Number(iteration.score || 0);
+        const x = Number(iteration.iteration || graph.points.length);
+        const targetY = score;
+        const color = scoreColor(score);
+        const sphere = new THREE.Mesh(
+          new THREE.SphereGeometry(0.05, 18, 18),
+          new THREE.MeshBasicMaterial({
+            color: color,
+          })
+        );
+        sphere.position.set(
+          graph.points.length ? graph.points[graph.points.length - 1].position.x : x,
+          animate && graph.points.length ? graph.points[graph.points.length - 1].position.y : targetY,
+          0
+        );
+        sphere.userData = {
+          ...iteration,
+          score,
+          targetY,
+          targetX: x,
+          iteration: Number(iteration.iteration),
+          animate
+        };
+        graph.group.add(sphere);
+        graph.points.push(sphere);
+        graph.data.push(iteration);
+        rebuildLine();
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        let changed = false;
+        graph.points.forEach((point) => {
+          const tx = point.userData.targetX;
+          const ty = point.userData.targetY;
+          if (Math.abs(point.position.x - tx) > 0.001 || Math.abs(point.position.y - ty) > 0.001) {
+            point.position.x += (tx - point.position.x) * 0.08;
+            point.position.y += (ty - point.position.y) * 0.08;
+            changed = true;
+          }
+        });
+        if (changed) {
+          rebuildLine();
+        }
+
+        graph.raycaster.setFromCamera(graph.mouse, graph.camera);
+        const intersections = graph.raycaster.intersectObjects(graph.points);
+        if (intersections.length) {
+          const hit = intersections[0].object;
+          tooltip.style.display = "block";
+          tooltip.textContent =
+            `ITERATION ${hit.userData.iteration}\n` +
+            `Score: ${Number(hit.userData.score || 0).toFixed(2)}\n` +
+            `Failures: ${hit.userData.fail_count || 0}\n` +
+            `Signal: ${hit.userData.signal || "continue"}`;
+        } else {
+          tooltip.style.display = "none";
+        }
+        renderer.render(scene, camera);
+      }
+
+      container.addEventListener("mousemove", (event) => {
+        const rect = container.getBoundingClientRect();
+        graph.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        graph.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        tooltip.style.left = `${event.clientX - rect.left + 14}px`;
+        tooltip.style.top = `${event.clientY - rect.top + 14}px`;
+      });
+      container.addEventListener("mouseleave", () => {
+        graph.mouse.x = -10;
+        graph.mouse.y = -10;
+        tooltip.style.display = "none";
+      });
+
+      resize();
+      setIterations([]);
+      requestAnimationFrame(animate);
+      return {
+        ...graph,
+        resize,
+        setIterations,
+        addIteration
+      };
+    }
+
+    function applySnapshot(snapshot) {
+      if (snapshot.run_state) {
+        state.run = { ...state.run, ...snapshot.run_state };
+        renderRunMeta();
+        renderPrompt();
+      }
+      if (snapshot.agent_active) {
+        handleAgentActive(snapshot.agent_active);
+      }
+      if (Array.isArray(snapshot.agent_logs)) {
+        state.logs = snapshot.agent_logs;
+        renderLogs();
+      }
+      if (Array.isArray(snapshot.iterations)) {
+        state.iterations = snapshot.iterations.map((item) => ({
+          ...item,
+          iteration: Number(item.iteration)
+        }));
+        state.diffIterations = state.iterations.slice();
+        renderDiffSelectors();
+        scoreGraph.setIterations(state.iterations);
+      }
+      if (Array.isArray(snapshot.review_cases)) {
+        state.reviewCases = snapshot.review_cases;
+        state.reviewIndex = snapshot.review_index || 0;
+        renderReview();
+      }
+    }
+
+    function handleRunState(payload) {
+      state.run = {
+        ...state.run,
+        ...payload
+      };
+      renderRunMeta();
+      renderPrompt();
+    }
+
+    function handleAgentActive(payload) {
+      state.activeAgent = {
+        agent: payload.agent || "idle",
+        status_text: payload.status_text || "idle"
+      };
+
+      if (!agentGraph) {
+        return;
+      }
+      if (payload.agent === "idle") {
+        agentGraph.setIdle();
+        return;
+      }
+      agentGraph.updateStatus(payload.agent, payload.status_text || "active", true);
+      agentGraph.addTrail(payload.agent);
+    }
+
+    function handleAgentLog(payload) {
+      prependLog(payload);
+      const message = payload.message || "";
+      if (message.startsWith("Evaluator")) {
+        agentGraph.updateStatus("evaluator", payload.status_text || "active", state.activeAgent.agent === "evaluator");
+      }
+    }
+
+    function handleIteration(payload) {
+      const idx = state.iterations.findIndex((item) => Number(item.iteration) === Number(payload.iteration));
+      if (idx >= 0) {
+        state.iterations[idx] = payload;
+      } else {
+        state.iterations.push(payload);
+      }
+      state.diffIterations = state.iterations.slice();
+      renderDiffSelectors();
+      handleRunState({
+        run_id: payload.run_id,
+        current_prompt: payload.current_prompt,
+        status: payload.signal
+      });
+      scoreGraph.addIteration(payload, true);
+    }
+
+    function handleReviewState(payload) {
+      state.reviewCases = Array.isArray(payload.cases) ? payload.cases : [];
+      state.reviewIndex = payload.review_index || 0;
+      renderReview();
+    }
+
+    function connectWebSocket() {
+      const url = `ws://localhost:${location.port || 7777}/ws`;
+      try {
+        state.socket = new WebSocket(url);
+      } catch (error) {
+        scheduleReconnect();
+        return;
+      }
+
+      state.socket.addEventListener("open", () => {
+        els.connectionDot.classList.add("connected");
+        els.connectionText.textContent = "CONNECTED";
+      });
+
+      state.socket.addEventListener("message", (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === "snapshot") {
+            applySnapshot(payload);
+          } else if (payload.type === "run_state") {
+            handleRunState(payload);
+          } else if (payload.type === "agent_active") {
+            handleAgentActive(payload);
+          } else if (payload.type === "agent_log") {
+            handleAgentLog(payload);
+          } else if (payload.type === "iteration") {
+            handleIteration(payload);
+          } else if (payload.type === "review_state") {
+            handleReviewState(payload);
+          }
+        } catch (error) {
+        }
+      });
+
+      state.socket.addEventListener("close", () => {
+        els.connectionDot.classList.remove("connected");
+        els.connectionText.textContent = "DISCONNECTED";
+        scheduleReconnect();
+      });
+
+      state.socket.addEventListener("error", () => {
+        els.connectionDot.classList.remove("connected");
+        els.connectionText.textContent = "DISCONNECTED";
+      });
+    }
+
+    function scheduleReconnect() {
+      if (state.reconnectTimer) {
+        return;
+      }
+      state.reconnectTimer = window.setTimeout(() => {
+        state.reconnectTimer = null;
+        connectWebSocket();
+      }, 3000);
+    }
+
+    function bindTabs() {
+      document.querySelectorAll(".tab-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".tab-button").forEach((item) => item.classList.remove("active"));
+          document.querySelectorAll(".tab-page").forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+          $(`tab-${button.dataset.tab}`).classList.add("active");
+        });
+      });
+    }
+
+    function bindReviewShortcuts() {
+      document.addEventListener("keydown", async (event) => {
+        const reviewVisible = $("tab-review").classList.contains("active");
+        if (!reviewVisible) {
+          return;
+        }
+        if (event.target === els.reviewEditor) {
+          if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "enter") {
+            await advanceReview("approve");
+          }
+          return;
+        }
+        const key = event.key.toLowerCase();
+        if (key === "a") {
+          await advanceReview("approve");
+        } else if (key === "e") {
+          toggleReviewEdit();
+        } else if (key === "r") {
+          await advanceReview("reject");
+        }
+      });
+    }
+
+    function bindControls() {
+      els.diffSelectA.addEventListener("change", renderDiff);
+      els.diffSelectB.addEventListener("change", renderDiff);
+      els.approveButton.addEventListener("click", () => advanceReview("approve"));
+      els.editButton.addEventListener("click", () => toggleReviewEdit());
+      els.rejectButton.addEventListener("click", () => advanceReview("reject"));
+      bindReviewShortcuts();
+    }
+
+    function resizeScenes() {
+      if (agentGraph) {
+        agentGraph.resize();
+      }
+      if (scoreGraph) {
+        scoreGraph.resize();
+      }
+    }
+
+    function init() {
+      els.connectionDot = $("connectionDot");
+      els.connectionText = $("connectionText");
+      els.runIdValue = $("runIdValue");
+      els.modelValue = $("modelValue");
+      els.statusValue = $("statusValue");
+      els.elapsedValue = $("elapsedValue");
+      els.promptPanel = $("promptPanel");
+      els.activityLog = $("activityLog");
+      els.agentGraphCanvas = $("agentGraphCanvas");
+      els.scoreGraphCanvas = $("scoreGraphCanvas");
+      els.scoreTooltip = $("scoreTooltip");
+      els.diffSelectA = $("diffSelectA");
+      els.diffSelectB = $("diffSelectB");
+      els.diffSummary = $("diffSummary");
+      els.diffAvoided = $("diffAvoided");
+      els.diffPanelA = $("diffPanelA");
+      els.diffPanelB = $("diffPanelB");
+      els.diffTitleA = $("diffTitleA");
+      els.diffTitleB = $("diffTitleB");
+      els.historyTableWrap = $("historyTableWrap");
+      els.reviewProgress = $("reviewProgress");
+      els.reviewInput = $("reviewInput");
+      els.reviewOutput = $("reviewOutput");
+      els.reviewEditor = $("reviewEditor");
+      els.approveButton = $("approveButton");
+      els.editButton = $("editButton");
+      els.rejectButton = $("rejectButton");
+
+      bindTabs();
+      bindControls();
+      renderRunMeta();
+      renderPrompt();
+      renderLogs();
+      renderDiffSelectors();
+      renderReview();
+
+      agentGraph = initAgentGraph();
+      scoreGraph = initScoreGraph();
+      window.__promptCrucible = {
+        state,
+        getAgentNodeCount: () => agentGraph ? Object.keys(agentGraph.nodes).length : 0,
+        getCanvasCount: () => document.querySelectorAll("canvas").length,
+        getIterationCount: () => state.iterations.length
+      };
+      window.addEventListener("resize", resizeScenes);
+      window.setInterval(renderRunMeta, 1000);
+
+      connectWebSocket();
+      loadHistory();
+      loadReview();
+    }
+
+    window.addEventListener("load", init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+NOVA ELEC SUPPLY
+workshop bill copy
+
+Inv#   NE-17/24
+Dt  02-04-24
+Cust: Acme Corp maint. team
+
+items supplied:
+chair arm rest kit   Qty  3   Rate 1250   Amt 3750
+24in disp monitor Qty2 @ 11200  Amt 22400
+cat6 patch cbl    Qty 15  rate 180  amt 2700
+
+sub ttl..... 28850
+gst18% .... 5193
+tot amt .... 34043
+
+pls pay in 10 days

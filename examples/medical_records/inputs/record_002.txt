@@ -1,0 +1,24 @@
+Riverside General Hospital
+Discharge Summary
+
+MRN: MR-882193
+Discharge Date: 2024-05-17
+Admitting diagnosis: Acute appendicitis
+Procedure: Laparoscopic appendectomy performed 2024-05-15
+
+Hospital Course:
+The patient recovered without complication after surgery. Pain was controlled with oral medication.
+Tolerating diet and ambulating independently at discharge.
+
+Discharge Diagnoses:
+- Acute appendicitis, status post laparoscopic appendectomy
+- Post-operative pain, improved
+
+Discharge Medications:
+- Amoxicillin-clavulanate 875/125 mg, one tablet twice daily for 5 days
+- Acetaminophen 650 mg every 6 hours as needed for pain
+- Docusate sodium 100 mg twice daily while taking pain medication
+
+Follow-up:
+Follow up with general surgery clinic in 1 week.
+Return sooner for fever, worsening abdominal pain, vomiting, or wound drainage.
